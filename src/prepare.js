@@ -4,7 +4,6 @@ var argv =  require('optimist')
             .demand(['in', 'out'])
             .argv;
 
-var _ =     require('underscore');
 var fs =    require('fs');
 var JSONStream = require('JSONStream');
 var jf =    require('jsonfile');
@@ -45,4 +44,5 @@ getStream().pipe(
 
     jf.writeFile(argv.out, oData);
     console.log("Done!");
+    console.log("HUngarian tweet count: " + oData.length);
 });
