@@ -12,4 +12,5 @@
 hs_err_pid*
 
 # project specific
-data/yamm/
+data/yamm.json
+prepare/node_modules/
