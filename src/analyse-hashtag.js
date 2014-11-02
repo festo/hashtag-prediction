@@ -59,6 +59,15 @@ _.each(aSortable, function(aCount) {
 _.each(aWithHashtag, function(oTweet) {
     if(oTweet.tags.length !== 0) {
         _.each(oTweet.tags, function(sTag) {
+            sTag = sTag.replace(/á/g, 'a')
+                        .replace(/é/g, 'e')
+                        .replace(/í/g, 'i')
+                        .replace(/ó/g, 'o')
+                        .replace(/ö/g, 'o')
+                        .replace(/ő/g, 'o')
+                        .replace(/ú/g, 'u')
+                        .replace(/ü/g, 'ü')
+                        .replace(/ű/g, 'u');
             if(sTag in oHashtags) {
                 oHashtags[sTag]++;
             } else {
@@ -72,7 +81,17 @@ aSortable = [];
 _.each(oHashtags, function(value, key) {
     aSortable.push([key, oHashtags[key]])
 });
-aSortable.sort(function(a, b) {return b[1] - a[1]});
+aSortable.sort(function(a, b) {
+    var ret = 0;
+    if (a[0] < b[0]) ret = -1;
+    if (a[0] > b[0]) ret = 1;
+
+    // if(ret === 0) {
+    //     if (a[0] < b[0]) ret = -1;
+    //     if (a[0] > b[0]) ret = 1;
+    // }
+    return ret;
+});
 
 console.log("\nUnique hastags: " + aSortable.length);
 console.log("Hastag, count");

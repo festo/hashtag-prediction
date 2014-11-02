@@ -1,7 +1,8 @@
 // Modules
 var argv =  require('optimist')
-            .usage('Usage: $0 -in [file] -out [file]')
+            .usage('Usage: $0 --in [file] --out [file] --hun')
             .demand(['in', 'out'])
+            .boolean('hun')
             .argv;
 
 var fs =    require('fs');
@@ -25,15 +26,24 @@ getStream().pipe(
         process.stdout.clearLine();  // clear current text
         process.stdout.cursorTo(0);
         process.stdout.write("Parsed object: " + (++nCounter));
-        if(data.hun) {
+        if(argv.hun) {
+            if(data.hun) {
+                oData.push({
+                    "user": data.user.id,
+                    "text": data.text,
+                    "tags": data.tags,
+                    "date": data.created_at["$date"]
+                });
+            }
+        } else {
             oData.push({
-                "user": data.user.id,
-                "text": data.text,
-                "tags": data.tags,
-                "date": data.created_at["$date"]
-            });
+                    "user": data.user.id,
+                    "text": data.text,
+                    "tags": data.tags,
+                    "date": data.created_at["$date"]
+                });
         }
-    });
+    })
 
 ).on('error', function (err){
     console.log("Error!");
@@ -44,5 +54,5 @@ getStream().pipe(
 
     jf.writeFile(argv.out, oData);
     console.log("Done!");
-    console.log("HUngarian tweet count: " + oData.length);
+    console.log("Tweet count: " + oData.length);
 });
