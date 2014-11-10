@@ -3,15 +3,20 @@ var argv =  require('optimist')
             .demand(['in'])
             .argv;
 
-var similarUsers = require('./similarUsers.js');
+var similarUsers = require('./module/similarUsers.js');
+var similarTweets = require('./module/similarTweets.js');
 var jf =    require('jsonfile');
 var oData,
-    simU;
+    simU,
+    simT;
 
 //read file
 oData = jf.readFileSync(argv.in); 
 
-console.log("Create user model");
-simU = similarUsers(oData);
+// console.log("Create model for users");
+// simU = similarUsers(oData);
 
-console.log(simU.getTopNUser('23603219', 5));
+console.log("Create model for tweets");
+simT = similarTweets(oData);
+
+console.log(simT.getTopNTweet("Vihar közeleg... #vihar #Szalánta http://t.co/dzvYRT73sD", 5));
