@@ -10,6 +10,7 @@ var similarUsers = function(data) {
         oTweetsWeight = {},
         oTokens = {},
         n_word = {},
+        T1 = null,
         nMaxTweet = 0;
          
 
@@ -84,10 +85,13 @@ var similarUsers = function(data) {
             t1,
             t2;
 
+        if(T1 !== null) {
+            t1 = T1;
+        } else {
+            t1 = Module.getTweetWeights(tweet1);
+            T1 = t1;
+        }
 
-        // console.log('get weights for 1. tweet');
-        t1 = Module.getTweetWeights(tweet1);
-        // console.log('get weights for 2. tweet');
         t2 = Module.getTweetWeights(tweet2);    
 
         for(var i = 0; i < t1.length; i++) {
@@ -101,8 +105,14 @@ var similarUsers = function(data) {
 
     Module.getTopNTweet = function(sTweet, N) {
         var ret = [],
-            counter = 0;
+            lastIndex = N-1,
+            counter = 0,
+            sim = 0,
             all = [];
+
+        // for (var i = 0; i < N; i++) {
+        //     ret.push([i, 0]);
+        // };
 
         _.each(oTweets, function(value, wteet_i){
             if(wteet_i !== sTweet) {
@@ -111,7 +121,17 @@ var similarUsers = function(data) {
             process.stdout.cursorTo(0);
             process.stdout.write("Similar tweets: " + (++counter));
 
-                all.push([wteet_i, Module.Sim(sTweet, wteet_i)]);
+            sim = Module.Sim(sTweet, wteet_i);
+            all.push([wteet_i, sim]);
+
+            // if(ret[lastIndex][1] < sim) {
+            //     ret[lastIndex] = [wteet_i,sim];
+            //     ret = _.sortBy(ret, function(item) {
+            //         return item[1];
+            //     });
+            // }
+
+                
             }
         });        
         console.log('');
@@ -122,22 +142,28 @@ var similarUsers = function(data) {
 
         console.log('Select top ' + N);
         for (var i = all.length - 1; i >= (all.length -N); i--) {
-            ret.push(all[i][0]);
+            ret.push([all[i][0], oTweets[all[i][0]].tags]);
         };
 
         return ret;
     };
 
     Module.getTweetWeights = function(sTweet) {
-        if(sTweet in oTweetsWeight) {
-            return oTweetsWeight[sTweet];
-        } else {
-            oTweetsWeight[sTweet] = [];
-            _.each(aWords, function(sWord) {
-                oTweetsWeight[sTweet].push(Module.w(sTweet, sWord));
+        // if(sTweet in oTweetsWeight) {
+        //     return oTweetsWeight[sTweet];
+        // } else {
+        //     oTweetsWeight[sTweet] = [];
+        //     _.each(aWords, function(sWord) {
+        //         oTweetsWeight[sTweet].push(Module.w(sTweet, sWord));
+        //     })
+        //     return oTweetsWeight[sTweet];
+        // }
+
+        var weight = [];
+        _.each(aWords, function(sWord) {
+                weight.push(Module.w(sTweet, sWord));
             })
-            return oTweetsWeight[sTweet];
-        }
+        return weight;
     };
 
 

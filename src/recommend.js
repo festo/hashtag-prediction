@@ -19,4 +19,4 @@ oData = jf.readFileSync(argv.in);
 console.log("Create model for tweets");
 simT = similarTweets(oData);
 
-console.log(simT.getTopNTweet("Vihar közeleg... #vihar #Szalánta http://t.co/dzvYRT73sD", 5));
+console.log(simT.getTopNTweet("RT @liverbirdynwa: meg mindig Help! Kellene egy profi hedszett szombatra Nokia E51-hez. #help pls Rt.", 5));
