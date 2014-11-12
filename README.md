@@ -1,5 +1,9 @@
 ## Hashtag prediction
 
+### 2014-11-13 - Working example
+- For one test tweet, the prediciton is working
+- Lot's of refactor
+
 ### 2014-11-09 - Basic suggestion system
 - Get top N similar user
 
