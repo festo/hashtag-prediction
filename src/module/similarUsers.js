@@ -73,12 +73,12 @@ var similarUsers = function(data) {
         });
 
         for (var i = all.length - 1; i >= (all.length -N); i--) {
-            var nSimilarity = all[i][0];
+            var nSimilarity = all[i][1];
+
             if(nSimilarity > 0) {
-                ret.push(nSimilarity);
+                ret.push(all[i][0]);
             }            
         };
-
         return ret;
     };
 
