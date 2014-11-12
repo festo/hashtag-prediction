@@ -1,7 +1,7 @@
 var _           = require('underscore');
 var math        = require('mathjs');
-var natural     = require('natural'),
-tokenizer   = new natural.WordTokenizer();
+var natural     = require('natural');
+var tokenizer   = new natural.WordTokenizer();
 
 var similarUsers = function(data) {
     var Module = {},

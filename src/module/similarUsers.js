@@ -1,5 +1,6 @@
-var _ =     require('underscore');
-var math =     require('mathjs');
+var _       = require('underscore');
+var math    = require('mathjs');
+
 var similarUsers = function(data) {
     var Module = {},
         aUsers = {},
@@ -38,7 +39,12 @@ var similarUsers = function(data) {
         return aUsers[id];
     };
 
-    Module.Sim = function(user1, user2) {
+    Module.Sim = function(nUnkwnowUser, user2) {
+
+        if(!(nUnkwnowUser in oUserWeight)) {
+            return 0;
+        }
+
         var counter = 0, 
             denominator = 0;
 
@@ -67,17 +73,18 @@ var similarUsers = function(data) {
         });
 
         for (var i = all.length - 1; i >= (all.length -N); i--) {
-            ret.push(all[i][0]);
+            var nSimilarity = all[i][0];
+            if(nSimilarity > 0) {
+                ret.push(nSimilarity);
+            }            
         };
 
         return ret;
     };
 
     Module.getHashtagsByUser = function(user) {
-        return aUsers[user];
+        return _.unique(aUsers[user]);
     };
-
-        // init
 
     _.each(data, function(oTweet) {
         if(oTweet.tags.length !== 0) {
@@ -111,10 +118,6 @@ var similarUsers = function(data) {
             oUserWeight[user].push(Module.w(hashtag, user));
         })
     })
-
-    // console.log(nMaxHashtag);
-    
-    // End init  
 
     return Module;
 }
