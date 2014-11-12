@@ -1,209 +1,167 @@
-var _ =     require('underscore');
-var math =     require('mathjs');
-var natural = require('natural'),
-    tokenizer = new natural.WordTokenizer();
+var _           = require('underscore');
+var math        = require('mathjs');
+var natural     = require('natural'),
+tokenizer   = new natural.WordTokenizer();
 
 var similarUsers = function(data) {
     var Module = {},
-        oTweets = {},
-        aWords = [],
-        oTweetsWeight = {},
-        oTokens = {},
-        n_word = {},
-        T1 = null,
-        nMaxTweet = 0;
-         
+    oTweets = {},
+    aUniqueWords = [],
+    oTweetsWeight = {},
+    oTokens = {},
+    oWordCountByTweets = {},
+    aUnknownTweetWeight = [],
+    nTweetCount = 0;
 
-    Module.freq = function(word, tweet) {
+    Module.freq = function(sWord, sTweet) {
         var aTokens;
-        if(tweet in oTokens) {
-            aTokens = oTokens[tweet];
+
+        if(sTweet in oTokens) {
+            aTokens = oTokens[sTweet];
         } else {
-            aTokens = tokenizer.tokenize(tweet);
+            aTokens = tokenizer.tokenize(sTweet);
         }
-       return _.filter(aTokens, function(sWord) {
-            return sWord === word;
+
+        return _.filter(aTokens, function(sWordFilter) {
+            return sWordFilter === sWord;
         }).length;
     };
 
-    Module.max = function(tweet) {
+    Module.max = function(sTweet) {
         var aTokens;
-        if(tweet in oTokens) {
-            aTokens = oTokens[tweet];
+        if(sTweet in oTokens) {
+            aTokens = oTokens[sTweet];
         } else {
-            aTokens = tokenizer.tokenize(tweet);
+            aTokens = tokenizer.tokenize(sTweet);
         }
         return aTokens.length;
     };
 
-    Module.TF = function(word, tweet) {
-        return Module.freq(word, tweet) / Module.max(tweet)
+    Module.TF = function(sWord, sTweet) {
+        return Module.freq(sWord, sTweet) / Module.max(sTweet)
     };
 
-    Module.IDF = function(word) {
-        var n = Module.n(word);
+    Module.IDF = function(sWord) {
+        var n = Module.n(sWord);
 
         if(n === 0) {
-            return nMaxTweet;
+            return nTweetCount;
         } else {
-            return Math.log( nMaxTweet / Module.n(word) );
+            return Math.log( nTweetCount / Module.n(sWord) );
         }        
     };
 
-    Module.w = function(tweet, word) {
-        var tf,
-            idf;
-
-        // console.log('Calc TF');
-        tf = Module.TF(word, tweet);
-        // console.log('Calc IDF');
-        idf = Module.IDF(word);
-        return  tf * idf;
+    Module.w = function(sTweet, sWord) {
+        return  Module.TF(sWord, sTweet) * Module.IDF(sWord);
     };
 
-    Module.n = function(word) {
-        if(word in n_word) {
-            return n_word[word];
+    Module.n = function(sWord) {
+        if(sWord in oWordCountByTweets) {
+            return oWordCountByTweets[sWord];
         }
 
-        var count = 0;
-
+        var nCount = 0;
         _.each(oTweets, function(oTweet){
-            if(_.indexOf(oTweet.tokens), word) {
-                count++;
+            if(_.indexOf(oTokens[oTweet.text], sWord) > -1) {
+                nCount++;
             }
         });
+        oWordCountByTweets[sWord] = nCount;
 
-        n_word[word] = count;
-        return n_word[word];       
+        return oWordCountByTweets[sWord];       
     };
 
 
-    Module.Sim = function(tweet1, tweet2) {
-        var counter = 0, 
-            denominator = 0,
-            t1,
-            t2;
+    Module.Sim = function(sTweetUnknow, sTweetKnow) {
+        var nCounter = 0, 
+            aKnownTweetWeight;
 
-        if(T1 !== null) {
-            t1 = T1;
-        } else {
-            t1 = Module.getTweetWeights(tweet1);
-            T1 = t1;
+        if(aUnknownTweetWeight.length === 0) {
+            aUnknownTweetWeight = Module.getTweetWeights(sTweetUnknow);
         }
 
-        t2 = Module.getTweetWeights(tweet2);    
+        aKnownTweetWeight = Module.getTweetWeights(sTweetKnow);    
 
-        for(var i = 0; i < t1.length; i++) {
-            counter += t1[i] * t2[i];
+        for(var i = 0; i < aUnknownTweetWeight.length; i++) {
+            nCounter += aUnknownTweetWeight[i] * aKnownTweetWeight[i];
         }
 
-        denominator = math.norm(t1) * math.norm(t2);
-
-        return counter/denominator;
+        return nCounter / ( math.norm(aUnknownTweetWeight) * math.norm(aKnownTweetWeight) );
     };
 
-    Module.getTopNTweet = function(sTweet, N) {
-        var ret = [],
-            lastIndex = N-1,
-            counter = 0,
-            sim = 0,
-            all = [];
+    Module.getTopNTweet = function(sTweetUnknow, N) {
+        var aReturnValue = [],
+            nCounter = 0,
+            aAllTweetSimilarity = [];
 
-        // for (var i = 0; i < N; i++) {
-        //     ret.push([i, 0]);
-        // };
+        _.each(oTweets, function(value, sTweet){
+            if(sTweet !== sTweetUnknow) {
 
-        _.each(oTweets, function(value, wteet_i){
-            if(wteet_i !== sTweet) {
+                process.stdout.clearLine();  // clear current text
+                process.stdout.cursorTo(0);
+                process.stdout.write("Similar tweets: " + (++nCounter));
 
-            process.stdout.clearLine();  // clear current text
-            process.stdout.cursorTo(0);
-            process.stdout.write("Similar tweets: " + (++counter));
-
-            sim = Module.Sim(sTweet, wteet_i);
-            all.push([wteet_i, sim]);
-
-            // if(ret[lastIndex][1] < sim) {
-            //     ret[lastIndex] = [wteet_i,sim];
-            //     ret = _.sortBy(ret, function(item) {
-            //         return item[1];
-            //     });
-            // }
-
-                
+                aAllTweetSimilarity.push([sTweet, Module.Sim(sTweet, sTweet)]);
             }
         });        
-        console.log('');
-        console.log('Sort ...');
-        all = _.sortBy(all, function(item) {
+
+        aAllTweetSimilarity = _.sortBy(aAllTweetSimilarity, function(item) {
             return item[1];
         });
 
-        console.log('Select top ' + N);
-        for (var i = all.length - 1; i >= (all.length -N); i--) {
-            ret.push([all[i][0], oTweets[all[i][0]].tags]);
+        console.log('\nSelect top ' + N);
+        for (var i = aAllTweetSimilarity.length - 1; i >= (aAllTweetSimilarity.length -N); i--) {
+            aReturnValue.push([aAllTweetSimilarity[i][0], oTweets[aAllTweetSimilarity[i][0]].tags]);
         };
 
-        return ret;
+        return aReturnValue;
     };
 
     Module.getTweetWeights = function(sTweet) {
-        // if(sTweet in oTweetsWeight) {
-        //     return oTweetsWeight[sTweet];
-        // } else {
-        //     oTweetsWeight[sTweet] = [];
-        //     _.each(aWords, function(sWord) {
-        //         oTweetsWeight[sTweet].push(Module.w(sTweet, sWord));
-        //     })
-        //     return oTweetsWeight[sTweet];
-        // }
-
-        var weight = [];
-        _.each(aWords, function(sWord) {
-                weight.push(Module.w(sTweet, sWord));
-            })
-        return weight;
+        var aWeight = [];
+        _.each(aUniqueWords, function(sWord) {
+            aWeight.push(Module.w(sTweet, sWord));
+        })
+        return aWeight;
     };
 
 
     // init
     _.each(data, function(oTweet) {
-        if(oTweet.tags.length !== 0) {
+        if(oTweet.tags.length !== 0) {  // select only tweets what has got tags
+
             process.stdout.clearLine();  // clear current text
             process.stdout.cursorTo(0);
-            process.stdout.write("Tokenize tweets: " + (++nMaxTweet));
+            process.stdout.write("Tokenize tweets: " + (++nTweetCount));
 
-            oTweet.tokens = tokenizer.tokenize(oTweet.text);
+            var aTokens = tokenizer.tokenize(oTweet.text);
 
             if(!(oTweet.text in oTokens)) {                        
-                oTokens[oTweet.text] = oTweet.tokens;    
+                oTokens[oTweet.text] = aTokens;
             }
 
-            for (var i = 0; i < oTweet.tokens.length; i++) {
-                aWords.push(oTweet.tokens[i]);
+            for (var i = 0; i < aTokens.length; i++) {
+                aUniqueWords.push(aTokens[i]);
             };
 
             oTweets[oTweet.text] = oTweet;
         }
     });
 
-    aWords = _.unique(aWords);
+    aUniqueWords = _.unique(aUniqueWords);
 
-    console.log('\nUnique word: '+aWords.length);
+    console.log('\nUnique word: '+aUniqueWords.length);
 
-    console.log('Calculate number tweets in which wl appears ...');
+    console.log('Calculate number of words by tweets ...');
     var i = 0;
-    _.each(aWords, function(word) {
+    _.each(aUniqueWords, function(sWord) {
         process.stdout.clearLine();  // clear current text
         process.stdout.cursorTo(0);
         process.stdout.write('' + (++i));
-        Module.n(word);
+        Module.n(sWord);
     });
     console.log('');
     
-    // End init  
-
     return Module;
 }
 
