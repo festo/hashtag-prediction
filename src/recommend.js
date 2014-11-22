@@ -26,13 +26,13 @@ oTweetModell = similarTweets(oData);
 console.log('Calculate frequency');
 oFreqModell = freq(oData);
 
-aTagHelper = oUserModell.getTopNUser(97974643, 5);
-_.each(aTagHelper, function(nUser) {
-    var aHashTags = oUserModell.getHashtagsByUser(nUser);
-    _.each(aHashTags, function(sKey) {
-        aRecomendedTags.push([sKey, oFreqModell.getfrequency(sKey)]);
-    });
-});
+// aTagHelper = oUserModell.getTopNUser(97974643, 5);
+// _.each(aTagHelper, function(nUser) {
+//     var aHashTags = oUserModell.getHashtagsByUser(nUser);
+//     _.each(aHashTags, function(sKey) {
+//         aRecomendedTags.push([sKey, oFreqModell.getfrequency(sKey)]);
+//     });
+// });
 
 aTagHelper = oTweetModell.getTopNTweet("RT @liverbirdynwa: meg mindig Help! Kellene egy profi hedszett szombatra Nokia E51-hez. #help pls Rt.", 5);
 _.each(aTagHelper, function(aTweetTag) {

@@ -1,6 +1,7 @@
 var _           = require('underscore');
 var math        = require('mathjs');
 var natural     = require('natural');
+var Sparse      = require('./sparse.js');
 var tokenizer   = new natural.WordTokenizer();
 
 var similarUsers = function(data) {
@@ -10,7 +11,7 @@ var similarUsers = function(data) {
     oTweetsWeight = {},
     oTokens = {},
     oWordCountByTweets = {},
-    aUnknownTweetWeight = [],
+    aUnknownTweetWeight = new Sparse(),
     nTweetCount = 0;
 
     Module.freq = function(sWord, sTweet) {
@@ -74,19 +75,19 @@ var similarUsers = function(data) {
 
     Module.Sim = function(sTweetUnknow, sTweetKnow) {
         var nCounter = 0, 
-            aKnownTweetWeight;
+            aKnownTweetWeight = new Sparse();
 
-        if(aUnknownTweetWeight.length === 0) {
+        if(aUnknownTweetWeight.getLength() === 0) {
             aUnknownTweetWeight = Module.getTweetWeights(sTweetUnknow);
         }
 
         aKnownTweetWeight = Module.getTweetWeights(sTweetKnow);    
 
-        for(var i = 0; i < aUnknownTweetWeight.length; i++) {
-            nCounter += aUnknownTweetWeight[i] * aKnownTweetWeight[i];
+        for(var i = 0; i < aUnknownTweetWeight.getLength(); i++) {
+            nCounter += aUnknownTweetWeight.get(i) * aKnownTweetWeight.get(i);
         }
 
-        return nCounter / ( math.norm(aUnknownTweetWeight) * math.norm(aKnownTweetWeight) );
+        return nCounter / ( math.norm(aUnknownTweetWeight.toArray()) * math.norm(aKnownTweetWeight.toArray()) );
     };
 
     Module.getTopNTweet = function(sTweetUnknow, N) {
@@ -118,7 +119,7 @@ var similarUsers = function(data) {
     };
 
     Module.getTweetWeights = function(sTweet) {
-        var aWeight = [];
+        var aWeight = new Sparse();
         _.each(aUniqueWords, function(sWord) {
             aWeight.push(Module.w(sTweet, sWord));
         })
