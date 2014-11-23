@@ -119,10 +119,15 @@ var similarUsers = function(data) {
     };
 
     Module.getTweetWeights = function(sTweet) {
+        if(sTweet in oTweetsWeight) {
+            return oTweetsWeight[sTweet];
+        }
+
         var aWeight = new Sparse();
         _.each(aUniqueWords, function(sWord) {
             aWeight.push(Module.w(sTweet, sWord));
-        })
+        });
+        oTweetsWeight[sTweet] = aWeight;
         return aWeight;
     };
 
@@ -135,7 +140,30 @@ var similarUsers = function(data) {
             process.stdout.cursorTo(0);
             process.stdout.write("Tokenize tweets: " + (++nTweetCount));
 
-            var aTokens = tokenizer.tokenize(oTweet.text);
+            var cleanText = _.filter(oTweet.text.split(' '), function(word) {
+                if(word.match(/http/) !== null) {
+                    return false;
+                }
+                return true;
+            }).join(' ');
+
+            var aTokens = tokenizer.tokenize(cleanText);
+            aTokens = _.filter(aTokens, function(word){
+                // remove buzz words
+                if(word.length < 3) {
+                    return false; 
+                }
+
+                if(word.substr(0,1) === "#") {
+                    return false;
+                }
+
+                if(word.match(/http/) !== null) {
+                    return false;
+                }
+
+                return true;
+            });
 
             if(!(oTweet.text in oTokens)) {                        
                 oTokens[oTweet.text] = aTokens;

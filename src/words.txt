@@ -1,0 +1,2 @@
+Create model for users
+Create model for tweets

@@ -26,23 +26,25 @@ getStream().pipe(
         process.stdout.clearLine();  // clear current text
         process.stdout.cursorTo(0);
         process.stdout.write("Parsed object: " + (++nCounter));
-        if(argv.hun) {
-            if(data.hun) {
+        if(data.tags.length !== 0) {
+            if(argv.hun) {
+                if(data.hun) {
+                    oData.push({
+                        "user": data.user.id,
+                        "text": data.text,
+                        "tags": data.tags,
+                        "date": data.created_at["$date"]
+                    });
+                }
+            } else {
                 oData.push({
-                    "user": data.user.id,
-                    "text": data.text,
-                    "tags": data.tags,
-                    "date": data.created_at["$date"]
-                });
+                        "user": data.user.id,
+                        "text": data.text,
+                        "tags": data.tags,
+                        "date": data.created_at["$date"]
+                    });
             }
-        } else {
-            oData.push({
-                    "user": data.user.id,
-                    "text": data.text,
-                    "tags": data.tags,
-                    "date": data.created_at["$date"]
-                });
-        }
+        }    
     })
 
 ).on('error', function (err){

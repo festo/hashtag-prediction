@@ -1,5 +1,6 @@
 var _       = require('underscore');
 var math    = require('mathjs');
+var Sparse      = require('./sparse.js');
 
 var similarUsers = function(data) {
     var Module = {},
@@ -48,11 +49,11 @@ var similarUsers = function(data) {
         var counter = 0, 
             denominator = 0;
 
-        for(var i = 0; i < oUserWeight[user1].length; i++) {
-            counter += oUserWeight[user1][i] * oUserWeight[user2][i];
+        for(var i = 0; i < oUserWeight[nUnkwnowUser].getLength(); i++) {
+            counter += oUserWeight[nUnkwnowUser].get(i) * oUserWeight[user2].get(i);
         }
 
-        denominator = math.norm(oUserWeight[user1]) * math.norm(oUserWeight[user2]);
+        denominator = math.norm(oUserWeight[nUnkwnowUser].toArray()) * math.norm(oUserWeight[user2].toArray());
 
         return counter/denominator;
 
@@ -113,7 +114,7 @@ var similarUsers = function(data) {
     });
 
     _.each(aUsers, function(userValue, user) {
-        oUserWeight[user] = [];
+        oUserWeight[user] = new Sparse();
         _.each(oHashtags, function(hashtagValue, hashtag) {
             oUserWeight[user].push(Module.w(hashtag, user));
         })
