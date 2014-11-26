@@ -59,15 +59,15 @@ _.each(aSortable, function(aCount) {
 _.each(aWithHashtag, function(oTweet) {
     if(oTweet.tags.length !== 0) {
         _.each(oTweet.tags, function(sTag) {
-            sTag = sTag.replace(/á/g, 'a')
-                        .replace(/é/g, 'e')
-                        .replace(/í/g, 'i')
-                        .replace(/ó/g, 'o')
-                        .replace(/ö/g, 'o')
-                        .replace(/ő/g, 'o')
-                        .replace(/ú/g, 'u')
-                        .replace(/ü/g, 'ü')
-                        .replace(/ű/g, 'u');
+            // sTag = sTag.replace(/á/g, 'a')
+            //             .replace(/é/g, 'e')
+            //             .replace(/í/g, 'i')
+            //             .replace(/ó/g, 'o')
+            //             .replace(/ö/g, 'o')
+            //             .replace(/ő/g, 'o')
+            //             .replace(/ú/g, 'u')
+            //             .replace(/ü/g, 'ü')
+            //             .replace(/ű/g, 'u');
             if(sTag in oHashtags) {
                 oHashtags[sTag]++;
             } else {

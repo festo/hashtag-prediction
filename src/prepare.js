@@ -5,10 +5,11 @@ var argv =  require('optimist')
             .boolean('hun')
             .argv;
 
-var fs =    require('fs');
+var _       = require('underscore');
+var fs      = require('fs');
 var JSONStream = require('JSONStream');
-var jf =    require('jsonfile');
-var es = require('event-stream');
+var jf      = require('jsonfile');
+var es          = require('event-stream');
 
 // Global variables
 var oData = [],
@@ -27,8 +28,50 @@ getStream().pipe(
         process.stdout.cursorTo(0);
         process.stdout.write("Parsed object: " + (++nCounter));
         if(data.tags.length !== 0) {
-            if(argv.hun) {
+            if(argv.hun) {                
                 if(data.hun) {
+
+                    // filter text
+                    var aTokens = _.filter(data.text.split(' '), function(word){
+                        // remove buzz words
+                        if(word.length < 3) {
+                            return false; 
+                        }
+
+                        if(word.substr(0,1) === "#") {
+                            return false;
+                        }
+
+                        if(word.match(/http/) !== null) {
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    if(aTokens.length === 0) {
+                        return;
+                    }
+
+                    // filter tags
+                    aTokens = _.filter(data.tags, function(word){
+                        // remove buzz words
+                        if(word.length < 3) {
+                            return false; 
+                        }
+
+                        return true;
+                    });
+
+                    if(aTokens.length === 0) {
+                        return;
+                    }
+
+                    // remove hashtags
+                    _.each(data.tags, function(sTag) {
+                        data.text = data.text.replace('#' + sTag, '');
+                    });
+
                     oData.push({
                         "user": data.user.id,
                         "text": data.text,
