@@ -1,6 +1,6 @@
 var argv            =  require('optimist')
-                        .usage('Usage: $0 --train [file] -n [number of similars] --test [file]')
-                        .demand(['train', 'n', 'test'])
+                        .usage('Usage: $0 --train [file] -u [number of similar users] -y [number of similar tweets] --test [file]')
+                        .demand(['train', 'u', 'y', 'test'])
                         .argv;
 
 var similarUsers    = require('./module/similarUsers.js');
@@ -30,7 +30,7 @@ function getTags(nUser, sTweet) {
     var aRecomendedTags = [],
         aTagHelper;
 
-    aTagHelper = oUserModell.getTopNUser(nUser, argv.n);
+    aTagHelper = oUserModell.getTopNUser(nUser, argv.u);
     _.each(aTagHelper, function(nUser) {
         var aHashTags = oUserModell.getHashtagsByUser(nUser);
         _.each(aHashTags, function(sKey) {
@@ -45,9 +45,9 @@ function getTags(nUser, sTweet) {
         return 0;
     });
     aRecomendedTags = _.unique(aTagHelper);
-    aRecomendedTags.splice(0, argv.n);
+    aRecomendedTags.splice(0, 5);
 
-    aTagHelper = oTweetModell.getTopNTweet(sTweet, argv.n);
+    aTagHelper = oTweetModell.getTopNTweet(sTweet, argv.y);
 
     _.each(aTagHelper, function(aTweetTag) {
         var aHashTags = aTweetTag[1];
@@ -65,11 +65,14 @@ function getTags(nUser, sTweet) {
 }
 
 var nSuccess = 0;
+var recCounter = 0;
 
 _.each(oTestData, function(oTweet) {
     var aSuggested,
         bMatch = false;
-    console.log('====================================');
+
+    recCounter++;    
+    console.log('=============== '+ recCounter +' =====================');
     console.log('Original tweet: ' + oTweet.text);
     console.log('Tags: ' + oTweet.tags.join(', '));
     aSuggested = getTags(oTweet.user, oTweet.text);
