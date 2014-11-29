@@ -28,8 +28,8 @@ getStream().pipe(
         process.stdout.cursorTo(0);
         process.stdout.write("Parsed object: " + (++nCounter));
         if(data.tags.length !== 0) {
-            if(argv.hun) {                
                 if(data.hun) {
+                    data.text = data.text.split("\n").join(" ");
 
                     // filter text
                     var aTokens = _.filter(data.text.split(' '), function(word){
@@ -42,7 +42,7 @@ getStream().pipe(
                             return false;
                         }
 
-                        if(word.match(/http/) !== null) {
+                        if(word.substr(0,4) === "http") {
                             return false;
                         }
 
@@ -53,6 +53,8 @@ getStream().pipe(
                         return;
                     }
 
+                    data.text = aTokens.join(' ');
+
                     // filter tags
                     aTokens = _.filter(data.tags, function(word){
                         // remove buzz words
@@ -62,15 +64,14 @@ getStream().pipe(
 
                         return true;
                     });
+                    data.tags = aTokens;
 
-                    if(aTokens.length === 0) {
+                    if(data.tags.length === 0 || data.text.length === 0) {
                         return;
                     }
 
-                    // remove hashtags
-                    _.each(data.tags, function(sTag) {
-                        data.text = data.text.replace('#' + sTag, '');
-                    });
+                    // remove urls
+                    // data.text = data.text.replace(/^(\[url=)?(https?:\/\/)?(www\.|\S+?\.)(\S+?\.)?\S+$\s*/mg, '');
 
                     oData.push({
                         "user": data.user.id,
@@ -79,14 +80,6 @@ getStream().pipe(
                         "date": data.created_at["$date"]
                     });
                 }
-            } else {
-                oData.push({
-                        "user": data.user.id,
-                        "text": data.text,
-                        "tags": data.tags,
-                        "date": data.created_at["$date"]
-                    });
-            }
         }    
     })
 

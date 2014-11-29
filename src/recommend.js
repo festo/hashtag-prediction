@@ -38,18 +38,22 @@ function getTags(nUser, sTweet) {
         });
     });
 
+    // split under the most N frequented tag
+    aRecomendedTags.sort(function(a, b) {
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
+        return 0;
+    });
+    aRecomendedTags = _.unique(aTagHelper);
+    aRecomendedTags.splice(0, argv.n);
+
     aTagHelper = oTweetModell.getTopNTweet(sTweet, argv.n);
+
     _.each(aTagHelper, function(aTweetTag) {
         var aHashTags = aTweetTag[1];
         _.each(aHashTags, function(sKey) {
             aRecomendedTags.push([sKey, oFreqModell.getfrequency(sKey)]);
         });
-    });
-
-    aRecomendedTags.sort(function(a, b) {
-        if (a[1] < b[1]) return -1;
-        if (a[1] > b[1]) return 1;
-        return 0;
     });
 
     aTagHelper = [];
@@ -60,8 +64,11 @@ function getTags(nUser, sTweet) {
     return aRecomendedTags;
 }
 
+var nSuccess = 0;
+
 _.each(oTestData, function(oTweet) {
-    var aSuggested;
+    var aSuggested,
+        bMatch = false;
     console.log('====================================');
     console.log('Original tweet: ' + oTweet.text);
     console.log('Tags: ' + oTweet.tags.join(', '));
@@ -70,7 +77,15 @@ _.each(oTestData, function(oTweet) {
     console.log('Matched:');
     _.each(oTweet.tags, function(sTag) {
         if(aSuggested.indexOf(sTag) > -1) {
+            bMatch = true;
             console.log(sTag);
         }
     });
+
+    if(bMatch) {
+        nSuccess++;
+    }
 });
+
+console.log('============ END ===============');
+console.log('Matched teweets: %s', nSuccess);

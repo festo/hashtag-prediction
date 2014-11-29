@@ -9,6 +9,7 @@
     "event-stream": "~3.1.7",
     "moment": "~2.8.3",
     "mathjs": "~1.0.1",
-    "natural": "~0.1.28"
+    "natural": "~0.1.28",
+    "xregexp": "~2.0.0"
   }
 }

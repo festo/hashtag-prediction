@@ -2,17 +2,22 @@ var _           = require('underscore');
 var math        = require('mathjs');
 var natural     = require('natural');
 var Sparse      = require('./sparse.js');
-var tokenizer   = new natural.WordTokenizer();
+var tokenizer   = new natural.WordTokenizer(),
+    TfIdf = natural.TfIdf,
+    tfidf = new TfIdf();
 
 var similarUsers = function(data) {
     var Module = {},
     oTweets = {},
     aUniqueWords = [],
     oTweetsWeight = {},
+    oTweetsWeightNorm = {},
     oTokens = {},
     oWordCountByTweets = {},
-    aUnknownTweetWeight = new Sparse(),
     nTweetCount = 0;
+
+var index = 0;
+
 
     Module.freq = function(sWord, sTweet) {
         var aTokens;
@@ -48,12 +53,17 @@ var similarUsers = function(data) {
         if(n === 0) {
             return nTweetCount;
         } else {
+            if(nTweetCount / Module.n(sWord) === 0) {
+                return 0;
+            }
             return Math.log( nTweetCount / Module.n(sWord) );
         }        
     };
 
     Module.w = function(sTweet, sWord) {
-        return  Module.TF(sWord, sTweet) * Module.IDF(sWord);
+        // console.log("W: " + oTweets[sTweet].id);
+        return tfidf.tfidf(sWord, oTweets[sTweet].id);
+        // return  Module.TF(sWord, sTweet) * Module.IDF(sWord);
     };
 
     Module.n = function(sWord) {
@@ -75,11 +85,14 @@ var similarUsers = function(data) {
 
     Module.Sim = function(sTweetUnknow, sTweetKnow) {
         var nCounter = 0, 
-            aKnownTweetWeight = new Sparse();
+            aKnownTweetWeight,
+            aUnknownTweetWeight,
 
-        if(aUnknownTweetWeight.getLength() === 0) {
-            aUnknownTweetWeight = Module.getTweetWeights(sTweetUnknow);
-        }
+
+        aUnknownTweetWeight = Module.getTweetWeights(sTweetUnknow);
+    
+        // console.log("");
+        // console.log(aUnknownTweetWeight.toString().length);
 
         aKnownTweetWeight = Module.getTweetWeights(sTweetKnow);    
 
@@ -87,13 +100,31 @@ var similarUsers = function(data) {
             nCounter += aUnknownTweetWeight.get(i) * aKnownTweetWeight.get(i);
         }
 
-        return nCounter / ( math.norm(aUnknownTweetWeight.toArray()) * math.norm(aKnownTweetWeight.toArray()) );
+        var res = nCounter / (Module.getTweetWeightsNorm(sTweetUnknow) * Module.getTweetWeightsNorm(sTweetKnow));
+        // if(res === 0) {
+            // console.log("sTweetUnknow: %s", sTweetUnknow);
+            // console.log("sTweetKnow: %s", sTweetKnow);
+            // console.log("Counter %s", nCounter);
+            // console.log("Norm1 %s", Module.getTweetWeightsNorm(sTweetUnknow));
+            // console.log("Norm2 %s", Module.getTweetWeightsNorm(sTweetKnow));
+        // }
+
+        // var returnValue = (oTweetsWeightNorm[sTweetUnknow] * oTweetsWeightNorm[sTweetKnow]);
+        // if(isNaN(returnValue) || isNaN(nCounter)) {
+        //     return 0;
+        // }
+
+        return nCounter / (oTweetsWeightNorm[sTweetUnknow] * oTweetsWeightNorm[sTweetKnow]);
     };
 
     Module.getTopNTweet = function(sTweetUnknow, N) {
         var aReturnValue = [],
             nCounter = 0,
             aAllTweetSimilarity = [];
+
+        tfidf.addDocument(sTweetUnknow, index);
+        oTweets[sTweetUnknow] = {tetx: sTweetUnknow, id: index};
+        index++;
 
         _.each(oTweets, function(value, sTweet){
             if(sTweet !== sTweetUnknow) {
@@ -102,13 +133,15 @@ var similarUsers = function(data) {
                 process.stdout.cursorTo(0);
                 process.stdout.write("Similar tweets: " + (++nCounter));
 
-                aAllTweetSimilarity.push([sTweet, Module.Sim(sTweet, sTweet)]);
+                aAllTweetSimilarity.push([sTweet, Module.Sim(sTweetUnknow, sTweet)]);
             }
         });        
 
         aAllTweetSimilarity = _.sortBy(aAllTweetSimilarity, function(item) {
             return item[1];
         });
+
+        // console.log(aAllTweetSimilarity);
 
         console.log('\nSelect top ' + N);
         for (var i = aAllTweetSimilarity.length - 1; i >= (aAllTweetSimilarity.length -N); i--) {
@@ -128,7 +161,18 @@ var similarUsers = function(data) {
             aWeight.push(Module.w(sTweet, sWord));
         });
         oTweetsWeight[sTweet] = aWeight;
-        return aWeight;
+        return oTweetsWeight[sTweet];
+    };
+
+    Module.getTweetWeightsNorm = function(sTweet) {
+        if(sTweet in oTweetsWeightNorm) {
+            return oTweetsWeightNorm[sTweet];
+        }
+
+        var aWeight = Module.getTweetWeights(sTweet);
+        
+        oTweetsWeightNorm[sTweet] = math.norm(aWeight.toArray());;
+        return oTweetsWeightNorm[sTweet];
     };
 
 
@@ -136,34 +180,13 @@ var similarUsers = function(data) {
     _.each(data, function(oTweet) {
         if(oTweet.tags.length !== 0) {  // select only tweets what has got tags
 
-            process.stdout.clearLine();  // clear current text
-            process.stdout.cursorTo(0);
-            process.stdout.write("Tokenize tweets: " + (++nTweetCount));
+            // process.stdout.clearLine();  // clear current text
+            // process.stdout.cursorTo(0);
+            // process.stdout.write("Tokenize tweets: " + (++nTweetCount));
 
-            var cleanText = _.filter(oTweet.text.split(' '), function(word) {
-                if(word.match(/http/) !== null) {
-                    return false;
-                }
-                return true;
-            }).join(' ');
+            tfidf.addDocument(oTweet.text);
 
-            var aTokens = tokenizer.tokenize(cleanText);
-            aTokens = _.filter(aTokens, function(word){
-                // remove buzz words
-                if(word.length < 3) {
-                    return false; 
-                }
-
-                if(word.substr(0,1) === "#") {
-                    return false;
-                }
-
-                if(word.match(/http/) !== null) {
-                    return false;
-                }
-
-                return true;
-            });
+            var aTokens = tokenizer.tokenize(oTweet.text);
 
             if(!(oTweet.text in oTokens)) {                        
                 oTokens[oTweet.text] = aTokens;
@@ -173,6 +196,9 @@ var similarUsers = function(data) {
                 aUniqueWords.push(aTokens[i]);
             };
 
+            oTweet.id = index;
+            index++;
+
             oTweets[oTweet.text] = oTweet;
         }
     });
@@ -180,6 +206,18 @@ var similarUsers = function(data) {
     aUniqueWords = _.unique(aUniqueWords);
 
     console.log('\nUnique word: '+aUniqueWords.length);
+
+    _.each(data, function(oTweet) {
+            var aWeight = new Sparse();
+            _.each(aUniqueWords, function(sWord) {
+                aWeight.push(Module.w(oTweet.text, sWord));
+            });
+            oTweetsWeight[oTweet.text] = aWeight; 
+            oTweetsWeightNorm[oTweet.text] = math.norm(aWeight.toArray());  
+            // console.log("Array");
+            // console.log(aWeight.toSting());
+            // console.log(oTweetsWeightNorm[oTweet.text]);    
+    });
 
     console.log('Calculate number of words by tweets ...');
     var i = 0;

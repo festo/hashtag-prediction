@@ -97,5 +97,5 @@ console.log("\nUnique hastags: " + aSortable.length);
 console.log("Hastag, count");
 console.log("-------------------------------------");
 _.each(aSortable, function(aCount) {
-    console.log(aCount[0] + ", " + aCount[1]);
+    console.log(aCount[1]);
 });

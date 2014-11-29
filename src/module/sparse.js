@@ -5,7 +5,7 @@ var Sparse = function() {
 
     Module.push = function(value) {
         counter++;
-        if(value !== 0) {
+        if(!isNaN(value) && value !== 0) {
             data[counter] = value;
         }
     };
@@ -30,6 +30,10 @@ var Sparse = function() {
         };
         return array;
     };
+
+    Module.toSting = function() {
+        return data;
+    }
 
     return Module;    
 };

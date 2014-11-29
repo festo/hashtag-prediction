@@ -8,6 +8,7 @@ var similarUsers = function(data) {
         oHashtags = {},
         nMaxUser = 0,
         nMaxHashtag = 0,
+        oUserWeightNorm = {},
         oUserWeight = {};  
 
     Module.freq = function(hashtag, user) {
@@ -53,7 +54,7 @@ var similarUsers = function(data) {
             counter += oUserWeight[nUnkwnowUser].get(i) * oUserWeight[user2].get(i);
         }
 
-        denominator = math.norm(oUserWeight[nUnkwnowUser].toArray()) * math.norm(oUserWeight[user2].toArray());
+        denominator = oUserWeightNorm[nUnkwnowUser] * oUserWeightNorm[user2];
 
         return counter/denominator;
 
@@ -118,6 +119,7 @@ var similarUsers = function(data) {
         _.each(oHashtags, function(hashtagValue, hashtag) {
             oUserWeight[user].push(Module.w(hashtag, user));
         })
+        oUserWeightNorm[user] = math.norm(oUserWeight[user].toArray());
     })
 
     return Module;
