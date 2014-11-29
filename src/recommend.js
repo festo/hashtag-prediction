@@ -1,6 +1,8 @@
 var argv            =  require('optimist')
                         .usage('Usage: $0 --train [file] -u [number of similar users] -y [number of similar tweets] --test [file]')
-                        .demand(['train', 'u', 'y', 'test'])
+                        .default('u', 0)
+                        .default('y', 0)                        
+                        .demand(['train', 'test'])
                         .argv;
 
 var similarUsers    = require('./module/similarUsers.js');
@@ -38,17 +40,7 @@ function getTags(nUser, sTweet) {
         });
     });
 
-    // split under the most N frequented tag
-    aRecomendedTags.sort(function(a, b) {
-        if (a[1] < b[1]) return -1;
-        if (a[1] > b[1]) return 1;
-        return 0;
-    });
-    aRecomendedTags = _.unique(aTagHelper);
-    aRecomendedTags.splice(0, 5);
-
     aTagHelper = oTweetModell.getTopNTweet(sTweet, argv.y);
-
     _.each(aTagHelper, function(aTweetTag) {
         var aHashTags = aTweetTag[1];
         _.each(aHashTags, function(sKey) {
@@ -56,12 +48,23 @@ function getTags(nUser, sTweet) {
         });
     });
 
+    // split under the most N frequented tag
+    aRecomendedTags.sort(function(a, b) {
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
+        return 0;
+    });
+
+    aRecomendedTags = _.unique(aRecomendedTags);
+
     aTagHelper = [];
     _.each(aRecomendedTags, function(aTag) {
         aTagHelper.push(aTag[0]);
     });
-    aRecomendedTags = _.unique(aTagHelper);
-    return aRecomendedTags;
+
+    aTagHelper = aTagHelper.splice(0, 5);
+
+    return aTagHelper;
 }
 
 var nSuccess = 0;
@@ -80,14 +83,15 @@ _.each(oTestData, function(oTweet) {
     console.log('Matched:');
     _.each(oTweet.tags, function(sTag) {
         if(aSuggested.indexOf(sTag) > -1) {
-            bMatch = true;
+            // bMatch = true;
+            nSuccess++;
             console.log(sTag);
         }
     });
 
-    if(bMatch) {
-        nSuccess++;
-    }
+    // if(bMatch) {
+    //     nSuccess++;
+    // }
 });
 
 console.log('============ END ===============');

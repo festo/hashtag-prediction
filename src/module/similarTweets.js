@@ -180,17 +180,17 @@ var index = 0;
     _.each(data, function(oTweet) {
         if(oTweet.tags.length !== 0) {  // select only tweets what has got tags
 
-            // process.stdout.clearLine();  // clear current text
-            // process.stdout.cursorTo(0);
-            // process.stdout.write("Tokenize tweets: " + (++nTweetCount));
+            process.stdout.clearLine();  // clear current text
+            process.stdout.cursorTo(0);
+            process.stdout.write("Tokenize tweets: " + (++nTweetCount));
 
             tfidf.addDocument(oTweet.text);
 
             var aTokens = tokenizer.tokenize(oTweet.text);
 
-            if(!(oTweet.text in oTokens)) {                        
-                oTokens[oTweet.text] = aTokens;
-            }
+            // if(!(oTweet.text in oTokens)) {                        
+            //     oTokens[oTweet.text] = aTokens;
+            // }
 
             for (var i = 0; i < aTokens.length; i++) {
                 aUniqueWords.push(aTokens[i]);
@@ -206,8 +206,12 @@ var index = 0;
     aUniqueWords = _.unique(aUniqueWords);
 
     console.log('\nUnique word: '+aUniqueWords.length);
-
+    var i = 0;
     _.each(data, function(oTweet) {
+            process.stdout.clearLine();  // clear current text
+            process.stdout.cursorTo(0);
+            process.stdout.write("Calculate TweetsWeight & norms: " + (++i));
+
             var aWeight = new Sparse();
             _.each(aUniqueWords, function(sWord) {
                 aWeight.push(Module.w(oTweet.text, sWord));
@@ -219,14 +223,14 @@ var index = 0;
             // console.log(oTweetsWeightNorm[oTweet.text]);    
     });
 
-    console.log('Calculate number of words by tweets ...');
-    var i = 0;
-    _.each(aUniqueWords, function(sWord) {
-        process.stdout.clearLine();  // clear current text
-        process.stdout.cursorTo(0);
-        process.stdout.write('' + (++i));
-        Module.n(sWord);
-    });
+    // console.log('Calculate number of words by tweets ...');
+    // var i = 0;
+    // _.each(aUniqueWords, function(sWord) {
+    //     process.stdout.clearLine();  // clear current text
+    //     process.stdout.cursorTo(0);
+    //     process.stdout.write('' + (++i));
+    //     Module.n(sWord);
+    // });
     console.log('');
     
     return Module;
